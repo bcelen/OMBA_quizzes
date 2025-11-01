@@ -18,9 +18,9 @@ with st.container():
     with col1:
         week_selection = st.selectbox("Select a quiz week:", options=week_labels)
     with col2:
-        target_mean = st.slider("🎯 Adjusted Average (Target)", min_value=7.4, max_value=7.6, value=7.5, step=0.01)
+        target_mean = st.slider("🎯 Adjusted Average", min_value=7.4, max_value=7.6, value=7.5, step=0.01)
     with col3:
-        target_pct_above_8 = st.slider("🔥 Max % of Adjusted Marks ≥ 8.0", min_value=0.20, max_value=0.30, value=0.30, step=0.01)
+        target_pct_above_8 = st.slider("🔥 Maximum percentage of adjusted marks above 8", min_value=0.20, max_value=0.30, value=0.30, step=0.01)
 
 st.markdown(
     """
@@ -60,16 +60,14 @@ try:
     # --- Summary Statistics ---
     actual_summary = {
         "📦 Students": len(raw_marks),
-        "🎯 Mean": round(np.mean(raw_marks), 2),
-        "📐 Std Dev": round(np.std(raw_marks), 2),
-        "🔥 % ≥ 8.0": f"{np.mean(raw_marks >= 8) * 100:.1f}%"
+        "🎯 Mean": f"{np.mean(raw_marks):.2f}",
+        "📐 Std Dev": f"{np.std(raw_marks):.2f}"
     }
 
     adjusted_summary = {
         "📦 Students": len(adjusted_marks),
-        "🎯 Mean": round(np.mean(adjusted_marks), 2),
-        "📐 Std Dev": round(np.std(adjusted_marks), 2),
-        "🔥 % ≥ 8.0": f"{np.mean(adjusted_marks >= 8) * 100:.1f}%"
+        "🎯 Mean": f"{np.mean(adjusted_marks):.2f}",
+        "📐 Std Dev": f"{np.std(adjusted_marks):.2f}"
     }
 
     summary_df = pd.DataFrame([actual_summary, adjusted_summary], index=["Actual Marks", "Adjusted Marks"])
@@ -104,22 +102,22 @@ try:
         ax.axhline(user_adjusted, color='red', linestyle='--', linewidth=1, label='Your Adjusted Mark')
         ax.axhline(user_mark, color='orange', linestyle='--', linewidth=1, label='Your Original Mark')
         ax.set_ylim(0, 10)
-        ax.set_xlabel("Student Index (Sorted by Original Mark)")
+        ax.set_xlabel("Student Index")
         ax.set_ylabel("Mark")
-        ax.set_title("Student Marks: Raw vs Adjusted with Your Mark Highlighted")
+        ax.set_title("Distribution of Marks (Raw vs Adjusted)")
         ax.legend()
         st.pyplot(fig)
 
     else:
         # --- Line Graph ---
-        st.subheader("📈 Student Marks (Raw vs Adjusted, Sorted by Raw Marks)")
+        st.subheader("📈 Distribution of Marks (Raw vs Adjusted)")
         fig, ax = plt.subplots(figsize=(10, 4))
         ax.plot(range(len(raw_sorted)), raw_sorted, marker='o', linestyle='-', label='Original', color='#FF6B6B')
         ax.plot(range(len(adjusted_sorted)), adjusted_sorted, marker='o', linestyle='-', label='Adjusted', color='#4D96FF')
         ax.set_ylim(0, 10)
-        ax.set_xlabel("Student Index (Sorted by Original Mark)")
+        ax.set_xlabel("Student Index")
         ax.set_ylabel("Mark")
-        ax.set_title("Student Marks: Raw vs Adjusted")
+        ax.set_title("Distribution of Marks (Raw vs Adjusted)")
         ax.legend()
         st.pyplot(fig)
 
