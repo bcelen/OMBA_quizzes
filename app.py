@@ -52,17 +52,24 @@ try:
     adjusted_sorted = adjusted_scores[sorted_indices]
 
     # --- Summary Statistics ---
-    pct_above_8 = np.mean(adjusted_scores >= 8) * 100
-    summary = {
+    actual_summary = {
         "📦 Students": len(raw_scores),
-        "🎯 Target Mean": round(target_mean, 2),
-        "📐 Adjusted Mean": round(np.mean(adjusted_scores), 2),
-        "📊 Adjusted Std Dev": round(np.std(adjusted_scores), 2),
-        "🔥 % ≥ 8.0": f"{pct_above_8:.1f}%"
+        "🎯 Mean": round(np.mean(raw_scores), 2),
+        "📐 Std Dev": round(np.std(raw_scores), 2),
+        "🔥 % ≥ 8.0": f"{np.mean(raw_scores >= 8) * 100:.1f}%"
     }
 
+    adjusted_summary = {
+        "📦 Students": len(adjusted_scores),
+        "🎯 Mean": round(np.mean(adjusted_scores), 2),
+        "📐 Std Dev": round(np.std(adjusted_scores), 2),
+        "🔥 % ≥ 8.0": f"{np.mean(adjusted_scores >= 8) * 100:.1f}%"
+    }
+
+    summary_df = pd.DataFrame([actual_summary, adjusted_summary], index=["Actual Scores", "Adjusted Scores"])
+
     st.subheader("Summary")
-    st.dataframe(pd.DataFrame([summary]))
+    st.dataframe(summary_df)
 
     # --- Line Graph ---
     st.subheader("📈 Student Scores (Raw vs Adjusted, Sorted by Raw Scores)")
@@ -76,17 +83,30 @@ try:
     ax.legend()
     st.pyplot(fig)
 
-    # --- Table Output ---
-    st.subheader("Raw vs Adjusted Scores")
-    table_df = pd.DataFrame({
-        "Original Score": np.round(raw_scores, 2),
-        "Adjusted Score": np.round(adjusted_scores, 2)
-    })
-    st.dataframe(table_df, use_container_width=True)
+    # --- Personal Score Lookup ---
+    st.subheader("🔍 Find Your Adjusted Score and Rank")
+    with st.form("lookup_form"):
+        user_score = st.number_input("Enter your actual quiz score (0-10):", min_value=0.0, max_value=10.0, step=0.1)
+        submitted = st.form_submit_button("Find My Adjusted Score")
 
-    # --- Download Option ---
-    csv = table_df.to_csv(index=False).encode("utf-8")
-    st.download_button("⬇️ Download Adjusted Scores CSV", data=csv, file_name=f"{filename.replace('.csv', '')}_adjusted.csv")
+    if submitted:
+        user_z = (user_score - np.mean(raw_scores)) / np.std(raw_scores)
+        user_adjusted = round(np.clip(user_z * required_std + target_mean, 0, 10), 2)
+        rank = int(np.sum(adjusted_scores > user_adjusted)) + 1
+        total = len(adjusted_scores)
+        st.info(f"Your adjusted score is: **{user_adjusted}**\n\nYour rank is: **{rank}** out of {total} students.")
+
+        # --- Add marker to plot ---
+        fig2, ax2 = plt.subplots(figsize=(10, 4))
+        ax2.plot(range(len(raw_sorted)), raw_sorted, marker='o', linestyle='-', label='Original', color='gray')
+        ax2.plot(range(len(adjusted_sorted)), adjusted_sorted, marker='o', linestyle='-', label='Adjusted', color='blue')
+        ax2.axhline(user_adjusted, color='red', linestyle='--', linewidth=1, label='Your Adjusted Score')
+        ax2.set_ylim(0, 10)
+        ax2.set_xlabel("Student Index (Sorted by Original Score)")
+        ax2.set_ylabel("Score")
+        ax2.set_title("Your Score in Context")
+        ax2.legend()
+        st.pyplot(fig2)
 
 except Exception:
     st.warning("⚠️ The quiz marks are not available yet. Please check back later.")
