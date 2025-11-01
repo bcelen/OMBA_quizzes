@@ -46,6 +46,11 @@ try:
 
     adjusted_scores = np.clip(z_scores * required_std + target_mean, 0, 10)
 
+    # --- Sort by original scores ---
+    sorted_indices = np.argsort(raw_scores)
+    raw_sorted = raw_scores[sorted_indices]
+    adjusted_sorted = adjusted_scores[sorted_indices]
+
     # --- Summary Statistics ---
     pct_above_8 = np.mean(adjusted_scores >= 8) * 100
     summary = {
@@ -59,13 +64,13 @@ try:
     st.subheader("Summary")
     st.dataframe(pd.DataFrame([summary]))
 
-    # --- Scatter Plot ---
-    st.subheader("📈 Student Scores (Raw vs Adjusted)")
+    # --- Line Graph ---
+    st.subheader("📈 Student Scores (Raw vs Adjusted, Sorted by Raw Scores)")
     fig, ax = plt.subplots(figsize=(10, 4))
-    ax.plot(range(len(raw_scores)), raw_scores, marker='o', linestyle='-', label='Original', color='gray')
-    ax.plot(range(len(adjusted_scores)), adjusted_scores, marker='o', linestyle='-', label='Adjusted', color='blue')
+    ax.plot(range(len(raw_sorted)), raw_sorted, marker='o', linestyle='-', label='Original', color='gray')
+    ax.plot(range(len(adjusted_sorted)), adjusted_sorted, marker='o', linestyle='-', label='Adjusted', color='blue')
     ax.set_ylim(0, 10)
-    ax.set_xlabel("Student Index")
+    ax.set_xlabel("Student Index (Sorted by Original Score)")
     ax.set_ylabel("Score")
     ax.set_title("Student Marks: Raw vs Adjusted")
     ax.legend()
