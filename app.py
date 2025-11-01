@@ -67,22 +67,23 @@ try:
 
     # --- Summary Statistics ---
     actual_summary = {
-        "📦 Students": len(raw_marks),
+        "📊 Students": len(raw_marks),
         "🎯 Mean": f"{np.mean(raw_marks):.2f}",
         "📐 Std Dev": f"{np.std(raw_marks):.2f}"
     }
 
     adjusted_summary = {
-        "📦 Students": len(adjusted_marks),
+        "📊 Students": len(adjusted_marks),
         "🎯 Mean": f"{np.mean(adjusted_marks):.2f}",
         "📐 Std Dev": f"{np.std(adjusted_marks):.2f}"
     }
 
     summary_df = pd.DataFrame([actual_summary, adjusted_summary], index=["Actual Marks", "Adjusted Marks"])
 
+    # --- Summary and Student Lookup ---
     col1, col2 = st.columns(2)
     with col1:
-        st.subheader("Summary")
+        st.subheader("📋 Summary")
         st.dataframe(summary_df)
 
     with col2:
