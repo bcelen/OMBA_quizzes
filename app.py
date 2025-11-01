@@ -80,10 +80,9 @@ try:
 
     summary_df = pd.DataFrame([actual_summary, adjusted_summary], index=["Actual Marks", "Adjusted Marks"])
 
-    st.subheader("Summary")
-
     col1, col2 = st.columns(2)
     with col1:
+        st.subheader("Summary")
         st.dataframe(summary_df)
 
     with col2:
