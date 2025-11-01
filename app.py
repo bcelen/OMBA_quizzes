@@ -13,15 +13,17 @@ st.title("📊 Weekly Quiz Adjustment Dashboard")
 week_labels = [f"Week {i} Quiz results" for i in range(1, 7)]
 week_files = [f"week{i}.csv" for i in range(1, 7)]
 
-week_selection = st.selectbox("Select a quiz week:", options=week_labels)
+with st.container():
+    col1, col2, col3 = st.columns([2, 2, 3])
+    with col1:
+        week_selection = st.selectbox("Select a quiz week:", options=week_labels)
+    with col2:
+        target_mean = st.slider("🎯 Adjusted Average (Target)", min_value=7.4, max_value=7.6, value=7.5, step=0.01)
+    with col3:
+        target_pct_above_8 = st.slider("🔥 Max % of Adjusted Scores ≥ 8.0", min_value=0.20, max_value=0.30, value=0.30, step=0.01)
+
 week_index = week_labels.index(week_selection)
 filename = week_files[week_index]
-
-# Slider for mean selection
-target_mean = st.slider("🎯 Adjusted Average (Target)", min_value=7.4, max_value=7.6, value=7.5, step=0.01)
-
-# Slider for maximum percentage of adjusted scores >= 8.0
-target_pct_above_8 = st.slider("🔥 Max % of Adjusted Scores ≥ 8.0", min_value=0.20, max_value=0.30, value=0.30, step=0.01)
 
 # --- Download Raw CSV from GitHub ---
 github_url = f"https://raw.githubusercontent.com/bcelen/weekly_quizzes/main/{filename}"
@@ -57,23 +59,16 @@ try:
     st.subheader("Summary")
     st.dataframe(pd.DataFrame([summary]))
 
-    # --- Histogram ---
-    st.subheader("Distribution of Adjusted Scores")
-    bins = [0, 5, 6, 7, 8, 9, 10]
-    labels = ["F", "P", "H3", "H2", "H1", "H1+"]
-    colors = ["#dddddd", "#bbbbee", "#88aaff", "#5588ff", "#0044cc", "#002288"]
-    hist, edges = np.histogram(adjusted_scores, bins=np.linspace(0, 10, 21))
-
-    fig, ax = plt.subplots()
-    for i in range(len(hist)):
-        left = edges[i]
-        right = edges[i+1]
-        color = "#0044cc" if right >= 8 else "#bbbbbb"
-        ax.bar(left, hist[i], width=right-left, color=color, align="edge", edgecolor="black")
-
-    ax.set_title("Adjusted Score Distribution")
-    ax.set_xlabel("Score")
-    ax.set_ylabel("Count")
+    # --- Scatter Plot ---
+    st.subheader("📈 Student Scores (Raw vs Adjusted)")
+    fig, ax = plt.subplots(figsize=(10, 4))
+    ax.plot(range(len(raw_scores)), raw_scores, marker='o', linestyle='-', label='Original', color='gray')
+    ax.plot(range(len(adjusted_scores)), adjusted_scores, marker='o', linestyle='-', label='Adjusted', color='blue')
+    ax.set_ylim(0, 10)
+    ax.set_xlabel("Student Index")
+    ax.set_ylabel("Score")
+    ax.set_title("Student Marks: Raw vs Adjusted")
+    ax.legend()
     st.pyplot(fig)
 
     # --- Table Output ---
