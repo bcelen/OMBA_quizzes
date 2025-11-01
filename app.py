@@ -5,9 +5,9 @@ import requests
 from scipy.stats import norm
 import matplotlib.pyplot as plt
 
-st.set_page_config(page_title="Weekly Quiz Adjustment", layout="wide")
+st.set_page_config(page_title="Weekly Quiz Results Dashboard", layout="wide")
 
-st.title("📊 Weekly Quiz Adjustment Dashboard")
+st.title("📊 Weekly Quiz Results Dashboard")
 
 # --- User Input ---
 week_labels = [f"Week {i} Quiz results" for i in range(1, 7)]
@@ -22,6 +22,14 @@ with st.container():
     with col3:
         target_pct_above_8 = st.slider("🔥 Max % of Adjusted Marks ≥ 8.0", min_value=0.20, max_value=0.30, value=0.30, step=0.01)
 
+st.markdown(
+    """
+    > MBS grade policy requires that the **mean of the final marks (out of 100)** be between **74 and 76**, and that the percentage of marks classified as **H1** does not exceed **30%**.  
+    > This dashboard applies an adjustment to the quiz marks to reflect these requirements **while preserving the original z-scores**.  
+    > Please note: although these distributions provide an indication of final outcomes, they may change by the end of the subject, particularly due to **zero marks that might be revised after the consensus date**.
+    """
+)
+
 week_index = week_labels.index(week_selection)
 filename = week_files[week_index]
 
@@ -34,8 +42,6 @@ try:
     raw_marks = pd.to_numeric(raw_marks, errors='coerce')
     raw_marks = raw_marks.dropna()
     raw_marks = np.clip(raw_marks.values, 0, 10)
-
-    st.success(f"✅ Loaded {filename} with {len(raw_marks)} valid marks.")
 
     # --- Compute Z Scores ---
     z_scores = (raw_marks - np.mean(raw_marks)) / np.std(raw_marks)
@@ -93,8 +99,8 @@ try:
 
         # --- Add marker to plot ---
         fig, ax = plt.subplots(figsize=(10, 4))
-        ax.plot(range(len(raw_sorted)), raw_sorted, marker='o', linestyle='-', label='Original', color='gray')
-        ax.plot(range(len(adjusted_sorted)), adjusted_sorted, marker='o', linestyle='-', label='Adjusted', color='blue')
+        ax.plot(range(len(raw_sorted)), raw_sorted, marker='o', linestyle='-', label='Original', color='#FF6B6B')  # Coral red
+        ax.plot(range(len(adjusted_sorted)), adjusted_sorted, marker='o', linestyle='-', label='Adjusted', color='#4D96FF')  # Sky blue
         ax.axhline(user_adjusted, color='red', linestyle='--', linewidth=1, label='Your Adjusted Mark')
         ax.axhline(user_mark, color='orange', linestyle='--', linewidth=1, label='Your Original Mark')
         ax.set_ylim(0, 10)
@@ -108,8 +114,8 @@ try:
         # --- Line Graph ---
         st.subheader("📈 Student Marks (Raw vs Adjusted, Sorted by Raw Marks)")
         fig, ax = plt.subplots(figsize=(10, 4))
-        ax.plot(range(len(raw_sorted)), raw_sorted, marker='o', linestyle='-', label='Original', color='gray')
-        ax.plot(range(len(adjusted_sorted)), adjusted_sorted, marker='o', linestyle='-', label='Adjusted', color='blue')
+        ax.plot(range(len(raw_sorted)), raw_sorted, marker='o', linestyle='-', label='Original', color='#FF6B6B')
+        ax.plot(range(len(adjusted_sorted)), adjusted_sorted, marker='o', linestyle='-', label='Adjusted', color='#4D96FF')
         ax.set_ylim(0, 10)
         ax.set_xlabel("Student Index (Sorted by Original Mark)")
         ax.set_ylabel("Mark")
