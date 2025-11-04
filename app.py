@@ -34,7 +34,7 @@ st.markdown(
     """
     > MBS grade policy requires that the **mean of the final marks (out of 100)** be between **74 and 76**, and that the percentage of marks classified as **H1** does not exceed **30%**.  
     > This dashboard applies an adjustment to the quiz marks to reflect these requirements **while preserving the original z-scores**.  
-    > Please note: although these distributions provide an indication of final outcomes, they may change by the end of the subject, particularly due to **zero marks that might be revised after the consensus date**.
+    > ⚠️ *Although these distributions provide an indication of final outcomes, they may change by the end of the subject, particularly due to zero marks that might be revised after the consensus date.*
     """
 )
 
@@ -86,15 +86,20 @@ try:
         st.subheader("📋 Summary")
         st.dataframe(summary_df)
 
+    show_marker = False
+    user_adjusted = None
+    rank = None
+    total = len(adjusted_marks)
+
     with col2:
         st.subheader("🔍 Find Your Adjusted Mark and Rank")
         with st.form("lookup_form"):
             input_col, result_col = st.columns(2)
             with input_col:
                 user_mark = st.number_input(
-                    "Enter your original quiz mark (0-10):",
+                    "Enter your original quiz mark (0–10):",
                     min_value=0.0, max_value=10.0, step=0.1,
-                    help="Enter the mark you received to find your adjusted mark and ranking."
+                    help="Enter your original mark to see adjustment and rank."
                 )
             submitted = st.form_submit_button("Find My Adjusted Mark")
 
@@ -102,19 +107,27 @@ try:
             user_z = (user_mark - np.mean(original_marks)) / np.std(original_marks)
             user_adjusted = round(np.clip(user_z * required_std + target_mean, 0, 10), 2)
             rank = int(np.sum(adjusted_marks > user_adjusted)) + 1
-            total = len(adjusted_marks)
-
             with result_col:
                 st.markdown(f"""
                     **Your adjusted mark is:** `{user_adjusted}`  
                     **Your rank is:** `{rank}` out of `{total}` students.
                 """)
+            show_marker = True
 
     # --- Line Graph ---
     st.subheader("📈 Distribution of Marks (Original vs Adjusted)")
     fig, ax = plt.subplots(figsize=(10, 4))
-    ax.plot(range(len(original_sorted)), original_sorted, marker='o', linestyle='-', label='Original', color='#FF6B6B')
-    ax.plot(range(len(adjusted_sorted)), adjusted_sorted, marker='o', linestyle='-', label='Adjusted', color='#4D96FF')
+    x_vals = range(len(original_sorted))
+
+    ax.plot(x_vals, original_sorted, marker='o', linestyle='-', label='Original Marks', color='#FF6B6B')
+    ax.plot(x_vals, adjusted_sorted, marker='o', linestyle='--', label='Adjusted Marks', color='#4D96FF')
+
+    if show_marker:
+        # Find the student’s original index and adjusted value position
+        user_index = np.searchsorted(np.sort(original_marks), user_mark)
+        ax.axhline(user_mark, color='#FF6B6B', linestyle=':', label="Your Original Mark")
+        ax.axhline(user_adjusted, color='#4D96FF', linestyle=':', label="Your Adjusted Mark")
+
     ax.set_ylim(0, 10)
     ax.set_xlabel("Student Index")
     ax.set_ylabel("Mark")
